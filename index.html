@@ -7,15 +7,17 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/102/three.js"></script>
+        <script src="js/three.js"></script>
+        <script src="js/mtlLoader.js"></script>
+        <script src="js/objLoader.js"></script>
         <scirpt src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.2/TweenMax.min.js"></scirpt>
 
         <script>
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000)
-            camera.position.z = 5;
+            camera.position.z = 25;
 
-            var renderer = new THREE.WebGLRenderer({antialias: true});
+            var renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
             renderer.setClearColor("#e5e5e5");
             renderer.setSize(window.innerWidth,window.innerHeight);
 
@@ -27,23 +29,58 @@
                 camera.updateProjectionMatrix();
             })
 
-            var geometry = new THREE.BoxGeometry(1, 1, 1);
-            var material = new THREE.MeshLambertMaterial({color: 0xFFCC00})
-            var mesh = new THREE.Mesh(geometry, material);
-
-            scene.add(mesh);
-
-            var light = new THREE.PointLight(0xFFFFFF, 1, 500);
-            light.position.set(10,0,25);
+            var light = new THREE.PointLight(0xFFFFFF, 1.4, 1000);
+            light.position.set(10,15,15);
             scene.add(light);
+
+            var objPoly;
+            var objGlass;
+
+
+            var mtlLoader = new THREE.MTLLoader();
+            mtlLoader.load('glass.mtl', function(materials) {
+
+                materials.preload();
+
+                var objLoader = new THREE.OBJLoader();
+                objLoader.setMaterials(materials);
+                objLoader.load('glass.obj', function (object){
+                    scene.add(object);
+                    objGlass = object;
+                    object.position.z -= 370;
+                    object.rotation.x = 250;
+                });
+            });
+
+
+            var mtlLoader = new THREE.MTLLoader();
+        mtlLoader.load('poly.mtl', function (materials) {
+
+            materials.preload();
+
+            // Load the object
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials(materials);
+            objLoader.load('poly.obj', function (object) {
+                scene.add(object);
+                objPoly = object;
+                object.position.z -= 70;
+                object.rotation.x = 250;
+
+                this.tl = new TimelineMax();
+                this.tl.from(ourObj2.scale, 2, {y: 0, x:0, z: 0, ease: Expo.easeOut})
+                this.tl.from(ourObj2.position, 2, {y: 0, z: -30,  ease: Expo.easeOut})
+                this.tl.from(ourObj.scale, 2, {x: 1.5, y: 1.5, z: 0, ease: Expo.easeOut}, '-=2')
+                this.tl.from(ourObj.position, 1, {y: -20, ease: Expo.easeOut}, '-=3')
+            });
+        });
+        
 
             var render = function() {
                 requestAnimationFrame(render);
 
-                mesh.rotation.x += 0.01;
-                mesh.rotation.y += 0.01;
-
-                mesh.scale.x -= 0.02;
+                objGlass.rotation.z -= .01;
+                objPoly.rotation.z += .03;
 
                 renderer.render(scene, camera);
             }
